@@ -1,26 +1,43 @@
 import time
 from audio_stream import AudioStream
 from audio_buffer import AudioBuffer
+from voice_detector import VoiceDetector
+from config import VOICE_THRESHOLD, MIN_VOICE_FRAMES, MIN_SILENCE_FRAMES
+
+detector = VoiceDetector(
+    threshold=VOICE_THRESHOLD,
+    min_voice_frames=MIN_VOICE_FRAMES,
+    min_silence_frames=MIN_SILENCE_FRAMES)
+
+def audio_callback(indata, frames, time_info, status):
+    buffer.update(indata)
 
 def main():
-    buffer = AudioBuffer(window_seconds=5)
-    audio = AudioStream()
+    global buffer
 
-    def audio_callback(indata, frames, time_info, status):
-        buffer.add_audio(indata)
+    buffer = AudioBuffer()
+    audio = AudioStream(device=1)
+    detector = VoiceDetector()
 
     audio.start(audio_callback)
 
-    print("Grabando audio en ventanas de 5 segundos...")
+    print("Escuchando micrófono...")
+
     try:
         while True:
-            time.sleep(0.1)
-            if buffer.should_emit():
-                window = buffer.get_window()
-                print(f"Ventana lista: {len(window)} muestras")
+            level = buffer.level
+            event = detector.process(level)
+
+            if event == "start":
+                print("🎤 VOICE START")
+            elif event == "end":
+                print("🛑 VOICE END")
+
+            time.sleep(0.05)
+
     except KeyboardInterrupt:
         audio.stop()
-        print("Audio detenido")
 
 if __name__ == "__main__":
     main()
+
