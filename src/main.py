@@ -1,14 +1,22 @@
 import time
-from osc_sender import OSCSender
-from config import OSC_IP, OSC_PORT
+import numpy as np
+from audio_stream import AudioStream
+
+def audio_callback(indata, frames, time_info, status):
+    volume = np.linalg.norm(indata)
+    print(f"Audio level: {volume:.3f}")
 
 def main():
-    osc = OSCSender(ip=OSC_IP, port=OSC_PORT)
+    audio = AudioStream()
+    audio.start(audio_callback)
 
-    print("Enviando prompts OSC cada 5 segundos...")
-    while True:
-        osc.send_prompt("test dream prompt from python")
-        time.sleep(5)
+    print("Micrófono activo. Ctrl+C para salir")
+    try:
+        while True:
+            time.sleep(0.1)
+    except KeyboardInterrupt:
+        audio.stop()
+        print("Audio detenido")
 
 if __name__ == "__main__":
     main()
