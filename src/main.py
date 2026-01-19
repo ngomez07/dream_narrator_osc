@@ -1,24 +1,31 @@
 import time
+
 from audio_stream import AudioStream
 from audio_buffer import AudioBuffer
 from voice_detector import VoiceDetector
-from config import VOICE_THRESHOLD, MIN_VOICE_FRAMES, MIN_SILENCE_FRAMES
 from prompt_logic import generate_prompt
 from osc_sender import OSCSender
 
-osc = OSCSender(
-    ip="192.168.44.234",  # tu IP actual
-    port=8000
+from config import (
+    VOICE_THRESHOLD,
+    MIN_VOICE_FRAMES,
+    MIN_SILENCE_FRAMES
 )
+
+
+# --- Audio callback -------------------------------------------------
 
 def audio_callback(indata, frames, time_info, status):
     buffer.update(indata)
 
+
+# --- Main -----------------------------------------------------------
+
 def main():
     global buffer
 
+    # Audio + logic components
     buffer = AudioBuffer()
-
     audio = AudioStream(device=1)
 
     detector = VoiceDetector(
@@ -27,8 +34,13 @@ def main():
         min_silence_frames=MIN_SILENCE_FRAMES
     )
 
-    audio.start(audio_callback)
+    osc = OSCSender(
+        ip="192.168.2.183",  # usa tu IP real
+        port=8000
+    )
 
+    # Start audio stream
+    audio.start(audio_callback)
     print("Escuchando micrófono...")
 
     try:
@@ -54,6 +66,10 @@ def main():
 
     except KeyboardInterrupt:
         audio.stop()
+        print("Audio detenido.")
+
+
+# --- Entry point ----------------------------------------------------
 
 if __name__ == "__main__":
     main()
