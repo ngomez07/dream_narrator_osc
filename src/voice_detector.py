@@ -30,3 +30,8 @@ class VoiceDetector:
             return "end"
 
         return None
+    
+def reset(self):
+    self.voice_frames = 0
+    self.silence_frames = 0
+    self.in_voice = False
