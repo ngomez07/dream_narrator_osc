@@ -38,7 +38,8 @@ def main():
         min_silence_frames=MIN_SILENCE_FRAMES
     )
 
-    prompt_engine = PromptEngine(mode="rules")
+    prompt_engine = PromptEngine(language="es")
+    #prompt_engine = PromptEngine(language="es")
     dream_state = DreamState()
 
     osc = OSCSender(

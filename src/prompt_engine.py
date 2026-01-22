@@ -1,19 +1,25 @@
+from perceptual_mapper import map_perception
+
+
 class PromptEngine:
-    def __init__(self, mode="rules"):
+    def __init__(self, mode="rules", language="en"):
         self.mode = mode
+        self.language = language
 
-    def generate(self, voice_event):
-        if self.mode == "rules":
-            return self._rules_prompt(voice_event)
+        self.listening_words = {
+            "en": ["listening", "waiting"],
+            "es": ["escucha", "espera"]
+        }
 
-        # Placeholder para futuros modos
-        return "abstract silent presence"
+    def generate(self, event: dict) -> str:
+        base_words = map_perception(event, self.language)
 
-    def _rules_prompt(self, event):
-        from prompt_logic import generate_prompt
+        # --- Force 6 words -----------------------------------------
+        extras = self.listening_words.get(
+            self.language, self.listening_words["en"]
+        )
 
-        prompt = generate_prompt(event)
+        while len(base_words) < 6:
+            base_words.append(extras[len(base_words) % len(extras)])
 
-        # Garantizar máximo 6 palabras
-        words = prompt.split()
-        return " ".join(words[:6])
+        return " ".join(base_words[:6])
