@@ -3,10 +3,12 @@ import time
 from audio_stream import AudioStream
 from audio_buffer import AudioBuffer
 from voice_detector import VoiceDetector
-from prompt_logic import generate_prompt
-from osc_sender import OSCSender
 
 from prompt_engine import PromptEngine
+from osc_sender import OSCSender
+from dream_state import DreamState
+
+from audio_features import extract_features  # 👈 NUEVO
 
 from config import (
     VOICE_THRESHOLD,
@@ -26,7 +28,7 @@ def audio_callback(indata, frames, time_info, status):
 def main():
     global buffer
 
-    # Audio + logic components
+    # --- Core components -------------------------------------------
     buffer = AudioBuffer()
     audio = AudioStream(device=1)
 
@@ -36,14 +38,15 @@ def main():
         min_silence_frames=MIN_SILENCE_FRAMES
     )
 
+    prompt_engine = PromptEngine(mode="rules")
+    dream_state = DreamState()
+
     osc = OSCSender(
-        ip="172.16.0.120",  # usa tu IP real
+        ip="172.16.0.120",  # tu IP actual
         port=8000
     )
 
-    prompt_engine = PromptEngine(mode="rules")
-
-    # Start audio stream
+    # --- Start audio ------------------------------------------------
     audio.start(audio_callback)
     print("Escuchando micrófono...")
     osc.send_prompt("Escuchando micrófono...")
@@ -62,8 +65,17 @@ def main():
                 voice_event = buffer.end()
                 print("📦 Evento:", voice_event)
 
-                if voice_event:
-                    prompt = prompt_engine.generate(voice_event)
+                if voice_event and "audio" in voice_event:
+                    # --- NEW: audio feature extraction -----------------
+                    features = extract_features(voice_event["audio"])
+                    print("🎛 Features:", features)
+
+                    # --- Prompt generation -----------------------------
+                    prompt = prompt_engine.generate({
+                        **voice_event,
+                        **features
+                    })
+
                     print("🌀 Prompt:", prompt)
                     osc.send_prompt(prompt)
 
