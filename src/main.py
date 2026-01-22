@@ -6,6 +6,8 @@ from voice_detector import VoiceDetector
 from prompt_logic import generate_prompt
 from osc_sender import OSCSender
 
+from prompt_engine import PromptEngine
+
 from config import (
     VOICE_THRESHOLD,
     MIN_VOICE_FRAMES,
@@ -35,13 +37,16 @@ def main():
     )
 
     osc = OSCSender(
-        ip="192.168.2.183",  # usa tu IP real
+        ip="172.16.0.120",  # usa tu IP real
         port=8000
     )
+
+    prompt_engine = PromptEngine(mode="rules")
 
     # Start audio stream
     audio.start(audio_callback)
     print("Escuchando micrófono...")
+    osc.send_prompt("Escuchando micrófono...")
 
     try:
         while True:
@@ -58,7 +63,7 @@ def main():
                 print("📦 Evento:", voice_event)
 
                 if voice_event:
-                    prompt = generate_prompt(voice_event)
+                    prompt = prompt_engine.generate(voice_event)
                     print("🌀 Prompt:", prompt)
                     osc.send_prompt(prompt)
 
